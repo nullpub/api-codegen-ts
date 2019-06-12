@@ -4,6 +4,17 @@ import { fromNullable, Option, option } from 'fp-ts/lib/Option';
 import { fromLeft, TaskEither, taskEither, tryCatch } from 'fp-ts/lib/TaskEither';
 import * as path from 'path';
 
+/**
+ * The core of api-codegen-ts is responsible for getting and validating
+ * the configuration options and chaining the configured parser and
+ * printer.
+ *
+ * Future features
+ * - Run prettier on files before writing them
+ * - When a file exists compare existing and new file hashes
+ * - When a file exists print diff
+ */
+
 export type PartialExcept<T, E extends keyof T> = Partial<T> & Pick<T, E>;
 
 interface PackageJSON {
@@ -86,7 +97,7 @@ function getPackageConfig<I>(M: Config<I>): TaskEither<string, PackageConfig> {
     });
 }
 
-function assembleMonad<I>(
+function assembleConfig<I>(
   config: Config<I>,
   pConfig: PackageConfig
 ): TaskEither<string, MonadApp<I>> {
@@ -132,7 +143,7 @@ export function log(M: Log, message: string) {
 
 export function main<I>(config: Config<I>): TaskEither<string, void> {
   return getPackageConfig(config)
-    .chain(p => assembleMonad(config, p))
+    .chain(p => assembleConfig(config, p))
     .chain(M =>
       M.log('Starting parsing')
         .chain(() => M.parser(M))

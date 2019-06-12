@@ -46,7 +46,7 @@
     "@types/node": "^12.0.7"
   },
   "apiCodegen": {
-    "src": "./local/loda-api.spec-3.0.0.json",
+    "src": "./local/loda-api.spec-2.0.json",
     "dst": "./local/dest"
   }
 }

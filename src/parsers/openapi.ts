@@ -5,16 +5,24 @@ import { formatValidationError } from 'io-ts-reporters';
 import { MonadApp, Parser } from '../core';
 import { OpenAPIObject, OpenAPIObjectIO } from '../types/openapi-3.0.2';
 
+/**
+ * The openapi parser is responsible for reading the designated src
+ * file, validating it, and transforming it into an OpenApiObject
+ */
+
 type App<I> = TaskEither<string, I>;
 
-function safeJsonParse<I>(s: string, path: string): TaskEither<string, I> {
+export function safeJsonParse<I>(
+  s: string,
+  path: string
+): TaskEither<string, I> {
   return tryCatch(
     () => Promise.resolve(JSON.parse(s) as I),
     e => `Error parsing ${path} ${e}`
   );
 }
 
-function getSource(M: MonadApp<OpenAPIObject>): App<string> {
+export function getSource(M: MonadApp<OpenAPIObject>): App<string> {
   return M.existsFile(M.src).chain(e => {
     if (e) {
       return M.log(`Reading source: ${M.src}`).chain(() => M.readFile(M.src));
@@ -23,7 +31,7 @@ function getSource(M: MonadApp<OpenAPIObject>): App<string> {
   });
 }
 
-function writeParseLog(
+export function writeParseLog(
   M: MonadApp<OpenAPIObject>,
   errors: Errors
 ): App<OpenAPIObject> {
@@ -34,7 +42,7 @@ function writeParseLog(
   ).chain(() => fromLeft(`Source validation failed. See errors in ${logName}`));
 }
 
-function parseSource(
+export function parseSource(
   M: MonadApp<OpenAPIObject>,
   source: unknown
 ): App<OpenAPIObject> {
@@ -52,4 +60,4 @@ function main(M: MonadApp<OpenAPIObject>): App<OpenAPIObject> {
     .chain(content => parseSource(M, content));
 }
 
-export const openApiParser: Parser<OpenAPIObject> = main;
+export const openapiParser: Parser<OpenAPIObject> = main;
