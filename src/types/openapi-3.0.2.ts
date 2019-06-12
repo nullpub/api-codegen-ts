@@ -1,6 +1,6 @@
 import { Option } from 'fp-ts/lib/Option';
 import * as t from 'io-ts';
-import { createOptionFromNullable, fromNullable, mapOutput } from 'io-ts-types';
+import { createOptionFromNullable } from 'io-ts-types';
 
 /**
  * Semver RegExp from https://github.com/sindresorhus/semver-regex/blob/master/index.js
@@ -26,24 +26,6 @@ type Semver = t.TypeOf<typeof Semver>;
 type CodecOf<T> = T extends t.Type<infer A, infer O, infer I>
   ? [A, O, I]
   : never;
-
-/**
- * Helper function to turn empty arrays into undefined on output
- */
-const toUndefined = <A>(x: A | null): A | undefined =>
-  Array.isArray(x) && x.length === 0 ? undefined : x;
-
-/**
- * Higer order codec to default nullable booleans to false
- */
-const nullableBooleanFalse = fromNullable(t.boolean)(false);
-
-/**
- * Higher order codec to default nullable arrays of codec T to empty arrays
- * on decode.
- */
-const nullableArray = <A, O = A, I = unknown>(codec: t.Type<A, O, I>) =>
-  mapOutput(fromNullable(t.array(codec))([]), toUndefined);
 
 /**
  * io-ts codecs for openapi 3.0.2
@@ -240,25 +222,40 @@ export const ExamplesObjectIO = t.record(
 );
 export type ExamplesObject = t.TypeOf<typeof ExamplesObjectIO>;
 
+export type Test = {
+  name: Option<string>;
+  tests: Option<(Test | string)[]>;
+};
+export type TestO = {
+  name?: string | null;
+  tests?: (TestO | string)[] | null;
+};
+export const TestIO: t.Type<Test, TestO> = t.recursion('Test', () =>
+  t.type({
+    name: createOptionFromNullable(t.string),
+    tests: createOptionFromNullable(t.array(t.union([TestIO, t.string]))),
+  })
+);
+
 /**
  * Schema Object
  *
  * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#SchemaObject
  */
 export type SchemaObject = {
-  nullable: boolean;
+  nullable: Option<boolean>;
   discriminator: Option<DiscriminatorObject>;
-  readOnly: boolean;
-  writeOnly: boolean;
+  readOnly: Option<boolean>;
+  writeOnly: Option<boolean>;
   xml: Option<XmlObject>;
   externalDocs: Option<ExternalDocumentationObject>;
   example: Option<any>;
-  examples: any[];
-  deprecated: boolean;
+  examples: Option<any[]>;
+  deprecated: Option<boolean>;
   type: Option<string>;
-  allOf: (SchemaObject | ReferenceObject)[];
-  oneOf: (SchemaObject | ReferenceObject)[];
-  anyOf: (SchemaObject | ReferenceObject)[];
+  allOf: Option<(SchemaObject | ReferenceObject)[]>;
+  oneOf: Option<(SchemaObject | ReferenceObject)[]>;
+  anyOf: Option<(SchemaObject | ReferenceObject)[]>;
   not: Option<SchemaObject | ReferenceObject>;
   items: Option<SchemaObject | ReferenceObject>;
   properties: Option<Record<string, SchemaObject | ReferenceObject>>;
@@ -269,78 +266,84 @@ export type SchemaObject = {
   title: Option<string>;
   multipleOf: Option<number>;
   maximum: Option<number>;
-  exclusiveMaximum: boolean;
+  exclusiveMaximum: Option<boolean>;
   minimum: Option<number>;
-  exclusiveMinimum: boolean;
+  exclusiveMinimum: Option<boolean>;
   maxLength: Option<number>;
   minLength: Option<number>;
   pattern: Option<string>;
   maxItems: Option<number>;
   minItems: Option<number>;
-  uniqueItems: boolean;
+  uniqueItems: Option<boolean>;
   maxProperties: Option<number>;
   minProperties: Option<number>;
-  required: string[];
-  enum: any[];
+  required: Option<string[]>;
+  enum: Option<any[]>;
 };
 // This type is necessary to make the types work
 export type SchemaObjectO = {
-  nullable?: boolean;
-  discriminator?: DiscriminatorObjectO;
-  readOnly?: boolean;
-  writeOnly?: boolean;
-  xml?: XmlObjectO;
-  externalDocs?: ExternalDocumentationObjectO;
-  example?: any;
-  examples?: any[];
-  deprecated?: boolean;
-  type?: string;
-  allOf?: (SchemaObjectO | ReferenceObject)[];
-  oneOf?: (SchemaObjectO | ReferenceObject)[];
-  anyOf?: (SchemaObjectO | ReferenceObject)[];
-  not?: SchemaObjectO | ReferenceObject;
-  items?: SchemaObjectO | ReferenceObject;
+  nullable?: boolean | null;
+  discriminator?: DiscriminatorObjectO | null;
+  readOnly?: boolean | null;
+  writeOnly?: boolean | null;
+  xml?: XmlObjectO | null;
+  externalDocs?: ExternalDocumentationObjectO | null;
+  example?: any | null;
+  examples?: any[] | null;
+  deprecated?: boolean | null;
+  type?: string | null;
+  allOf?: (SchemaObjectO | ReferenceObject)[] | null;
+  oneOf?: (SchemaObjectO | ReferenceObject)[] | null;
+  anyOf?: (SchemaObjectO | ReferenceObject)[] | null;
+  not?: SchemaObjectO | ReferenceObject | null;
+  items?: SchemaObjectO | ReferenceObject | null;
   properties?: {
-    [propertyName: string]: SchemaObjectO | ReferenceObject;
-  };
-  additionalProperties?: SchemaObjectO | ReferenceObject | boolean;
-  description?: string;
-  format?: string;
-  default?: any;
-  title?: string;
-  multipleOf?: number;
-  maximum?: number;
-  exclusiveMaximum?: boolean;
-  minimum?: number;
-  exclusiveMinimum?: boolean;
-  maxLength?: number;
-  minLength?: number;
-  pattern?: string;
-  maxItems?: number;
-  minItems?: number;
-  uniqueItems?: boolean;
-  maxProperties?: number;
-  minProperties?: number;
-  required?: string[];
-  enum?: any[];
+    [propertyName: string]: SchemaObjectO | ReferenceObject | null;
+  } | null;
+  additionalProperties?: SchemaObjectO | ReferenceObject | boolean | null;
+  description?: string | null;
+  format?: string | null;
+  default?: any | null;
+  title?: string | null;
+  multipleOf?: number | null;
+  maximum?: number | null;
+  exclusiveMaximum?: boolean | null;
+  minimum?: number | null;
+  exclusiveMinimum?: boolean | null;
+  maxLength?: number | null;
+  minLength?: number | null;
+  pattern?: string | null;
+  maxItems?: number | null;
+  minItems?: number | null;
+  uniqueItems?: boolean | null;
+  maxProperties?: number | null;
+  minProperties?: number | null;
+  required?: string[] | null;
+  enum?: any[] | null;
 };
 export const SchemaObjectIO: t.Type<SchemaObject, SchemaObjectO> = t.recursion(
   'SchemaObjectIO',
   () =>
     t.type({
-      nullable: nullableBooleanFalse,
+      nullable: createOptionFromNullable(t.boolean),
       discriminator: createOptionFromNullable(DiscriminatorObjectIO),
-      readOnly: nullableBooleanFalse,
-      writeOnly: nullableBooleanFalse,
+      readOnly: createOptionFromNullable(t.boolean),
+      writeOnly: createOptionFromNullable(t.boolean),
       xml: createOptionFromNullable(XmlObjectIO),
       externalDocs: createOptionFromNullable(ExternalDocumentationObjectIO),
       example: createOptionFromNullable(t.any),
-      examples: nullableArray(t.any),
-      deprecated: nullableBooleanFalse,
+      examples: createOptionFromNullable(t.array(t.any)),
+      deprecated: createOptionFromNullable(t.boolean),
       type: createOptionFromNullable(t.string),
-      allOf: nullableArray(t.union([SchemaObjectIO, ReferenceObjectIO])),
-      oneOf: nullableArray(t.union([SchemaObjectIO, ReferenceObjectIO])),
-      anyOf: nullableArray(t.union([SchemaObjectIO, ReferenceObjectIO])),
+      allOf: createOptionFromNullable(
+        t.array(t.union([SchemaObjectIO, ReferenceObjectIO]))
+      ),
+      oneOf: createOptionFromNullable(
+        t.array(t.union([SchemaObjectIO, ReferenceObjectIO]))
+      ),
+      anyOf: createOptionFromNullable(
+        t.array(t.union([SchemaObjectIO, ReferenceObjectIO]))
+      ),
       not: createOptionFromNullable(
         t.union([SchemaObjectIO, ReferenceObjectIO])
       ),
@@ -359,19 +362,19 @@ export const SchemaObjectIO: t.Type<SchemaObject, SchemaObjectO> = t.recursion(
       title: createOptionFromNullable(t.string),
       multipleOf: createOptionFromNullable(t.number),
       maximum: createOptionFromNullable(t.number),
-      exclusiveMaximum: nullableBooleanFalse,
+      exclusiveMaximum: createOptionFromNullable(t.boolean),
       minimum: createOptionFromNullable(t.number),
-      exclusiveMinimum: nullableBooleanFalse,
+      exclusiveMinimum: createOptionFromNullable(t.boolean),
       maxLength: createOptionFromNullable(t.number),
       minLength: createOptionFromNullable(t.number),
       pattern: createOptionFromNullable(t.string),
       maxItems: createOptionFromNullable(t.number),
       minItems: createOptionFromNullable(t.number),
-      uniqueItems: nullableBooleanFalse,
+      uniqueItems: createOptionFromNullable(t.boolean),
       maxProperties: createOptionFromNullable(t.number),
       minProperties: createOptionFromNullable(t.number),
-      required: nullableArray(t.string),
-      enum: nullableArray(t.any),
+      required: createOptionFromNullable(t.array(t.string)),
+      enum: createOptionFromNullable(t.array(t.any)),
     })
 );
 
@@ -405,12 +408,12 @@ export type ContentObject = t.TypeOf<typeof ContentObjectIO>;
  */
 export const BaseParameterObjectIO = t.type({
   description: createOptionFromNullable(t.string),
-  required: nullableBooleanFalse,
-  deprecated: nullableBooleanFalse,
-  allowEmptyValue: nullableBooleanFalse,
+  required: createOptionFromNullable(t.boolean),
+  deprecated: createOptionFromNullable(t.boolean),
+  allowEmptyValue: createOptionFromNullable(t.boolean),
   style: createOptionFromNullable(ParameterStyleIO),
-  explode: nullableBooleanFalse,
-  allowReserved: nullableBooleanFalse,
+  explode: createOptionFromNullable(t.boolean),
+  allowReserved: createOptionFromNullable(t.boolean),
   schema: createOptionFromNullable(
     t.union([SchemaObjectIO, ReferenceObjectIO])
   ),
@@ -480,8 +483,8 @@ export const EncodingPropertyObjectIO = t.type({
     t.record(t.string, t.union([HeaderObjectIO, ReferenceObjectIO]))
   ),
   style: createOptionFromNullable(t.string),
-  explode: nullableBooleanFalse,
-  allowReserved: nullableBooleanFalse,
+  explode: createOptionFromNullable(t.boolean),
+  allowReserved: createOptionFromNullable(t.boolean),
 });
 export type EncodingPropertyObject = t.TypeOf<typeof EncodingPropertyObjectIO>;
 
@@ -501,7 +504,7 @@ export type EncodingObject = t.TypeOf<typeof EncodingObjectIO>;
 export const RequestBodyObjectIO = t.type({
   description: createOptionFromNullable(t.string),
   content: ContentObjectIO,
-  required: nullableBooleanFalse,
+  required: createOptionFromNullable(t.boolean),
 });
 export type RequestBodyObject = t.TypeOf<typeof RequestBodyObjectIO>;
 
@@ -548,8 +551,8 @@ export const XmlObjectIO = t.type({
   name: createOptionFromNullable(t.string),
   namespace: createOptionFromNullable(t.string),
   prefix: createOptionFromNullable(t.string),
-  attribute: nullableBooleanFalse,
-  wrapped: nullableBooleanFalse,
+  attribute: createOptionFromNullable(t.boolean),
+  wrapped: createOptionFromNullable(t.boolean),
 });
 export type XmlObject = t.TypeOf<typeof XmlObjectIO>;
 export type XmlObjectO = CodecOf<typeof XmlObjectIO>[1];
@@ -634,7 +637,7 @@ export type SecurityRequirementObject = t.TypeOf<
  * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#OperationObject
  */
 export const OperationObjectIO = t.type({
-  tags: nullableArray(t.string),
+  tags: createOptionFromNullable(t.array(t.string)),
   summary: createOptionFromNullable(t.string),
   description: createOptionFromNullable(t.string),
   externalDocs: createOptionFromNullable(ExternalDocumentationObjectIO),
@@ -647,9 +650,9 @@ export const OperationObjectIO = t.type({
   ),
   responses: ResponsesObjectIO,
   // callbacks: createOptionFromNullable(CallbacksObjectIO), // I'm too lazy to implement mutual recursion right now
-  deprecated: nullableBooleanFalse,
-  security: nullableArray(SecurityRequirementObjectIO),
-  servers: nullableArray(ServerObjectIO),
+  deprecated: createOptionFromNullable(t.boolean),
+  security: createOptionFromNullable(t.array(SecurityRequirementObjectIO)),
+  servers: createOptionFromNullable(t.array(ServerObjectIO)),
 });
 export type OperationObject = t.TypeOf<typeof OperationObjectIO>;
 
@@ -670,7 +673,7 @@ export const PathItemObjectIO = t.type({
   head: createOptionFromNullable(OperationObjectIO),
   patch: createOptionFromNullable(OperationObjectIO),
   trace: createOptionFromNullable(OperationObjectIO),
-  servers: nullableArray(ServerObjectIO),
+  servers: createOptionFromNullable(t.array(ServerObjectIO)),
   parameters: createOptionFromNullable(
     t.array(t.union([ParameterObjectIO, ReferenceObjectIO]))
   ),
@@ -748,11 +751,11 @@ export type ComponentsObject = t.TypeOf<typeof ComponentsObjectIO>;
 export const OpenAPIObjectIO = t.type({
   openapi: Semver,
   info: InfoObjectIO,
-  servers: nullableArray(ServerObjectIO),
+  servers: createOptionFromNullable(t.array(ServerObjectIO)),
   paths: PathsObjectIO,
   components: createOptionFromNullable(ComponentsObjectIO),
-  security: nullableArray(SecurityRequirementObjectIO),
-  tags: nullableArray(TagObjectIO),
+  security: createOptionFromNullable(t.array(SecurityRequirementObjectIO)),
+  tags: createOptionFromNullable(t.array(TagObjectIO)),
   externalDocs: createOptionFromNullable(ExternalDocumentationObjectIO),
 });
 export type OpenAPIObject = t.TypeOf<typeof OpenAPIObjectIO>;

@@ -102,7 +102,7 @@ function assembleMonad<I>(
   return fromEither(monad);
 }
 
-function writeFile(M: MonadApp, file: File): TaskEither<string, void> {
+function writeFile<I>(M: MonadApp<I>, file: File): TaskEither<string, void> {
   const writeFile = M.writeFile(file.path, file.content);
   return M.fromTask<string, boolean>(M.existsFile(file.path)).chain(exists => {
     if (exists) {
@@ -123,7 +123,10 @@ function writeFile(M: MonadApp, file: File): TaskEither<string, void> {
   });
 }
 
-function writeFiles(M: MonadApp, files: File[]): TaskEither<string, void> {
+function writeFiles<I>(
+  M: MonadApp<I>,
+  files: File[]
+): TaskEither<string, void> {
   return array
     .traverse(taskEither)(files, file => writeFile(M, file))
     .map(() => undefined);

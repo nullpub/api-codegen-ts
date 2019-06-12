@@ -5,7 +5,7 @@ import * as fs from 'fs-extra';
 import glob = require('glob');
 import rimraf = require('rimraf');
 
-import { Config, main } from './core';
+import { Config, main, Parser, Printer } from './core';
 import { openApiParser } from './parsers/openapi';
 import { typescriptPrinter } from './printers/typescript';
 import { OpenAPIObject } from './types/openapi-3.0.2';
@@ -39,6 +39,6 @@ function onRight(): Task<void> {
   return task.of(undefined);
 }
 
-export const app = main(monadApp)
-  .foldTask(onLeft, onRight)
-  .run();
+export { Config, Parser, Printer, main };
+
+export const defaultApp = main(monadApp).foldTask(onLeft, onRight);
