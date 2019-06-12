@@ -5,6 +5,7 @@
   "main": "lib/index.js",
   "bin": "lib/bin.js",
   "scripts": {
+    "start": "ts-node ./src/bin.ts",
     "clean": "rimraf rm -rf lib/*",
     "build": "npm run clean && tsc",
     "test": "tsc --noEmit"

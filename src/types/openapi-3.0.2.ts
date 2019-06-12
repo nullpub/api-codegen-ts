@@ -1,6 +1,6 @@
 import { Option } from 'fp-ts/lib/Option';
 import * as t from 'io-ts';
-import { createOptionFromNullable } from 'io-ts-types';
+import { createOptionFromNullable, fromNullable } from 'io-ts-types';
 
 /**
  * Semver RegExp from https://github.com/sindresorhus/semver-regex/blob/master/index.js
@@ -85,9 +85,7 @@ export type InfoObject = t.TypeOf<typeof InfoObjectIO>;
  * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#ServerVariableObject
  */
 export const ServerVariableObjectIO = t.type({
-  enum: createOptionFromNullable(
-    t.union([t.array(t.string), t.array(t.boolean), t.array(t.number)])
-  ),
+  enum: fromNullable(t.array(t.string))([]),
   default: t.union([t.string, t.boolean, t.number]),
   description: createOptionFromNullable(t.string),
 });
@@ -101,9 +99,7 @@ export type ServerVariableObject = t.TypeOf<typeof ServerVariableObjectIO>;
 export const ServerObjectIO = t.type({
   url: t.string,
   description: createOptionFromNullable(t.string),
-  variables: createOptionFromNullable(
-    t.record(t.string, ServerVariableObjectIO)
-  ),
+  variables: fromNullable(t.record(t.string, ServerVariableObjectIO))({}),
 });
 export type ServerObject = t.TypeOf<typeof ServerObjectIO>;
 
@@ -222,40 +218,25 @@ export const ExamplesObjectIO = t.record(
 );
 export type ExamplesObject = t.TypeOf<typeof ExamplesObjectIO>;
 
-export type Test = {
-  name: Option<string>;
-  tests: Option<(Test | string)[]>;
-};
-export type TestO = {
-  name?: string | null;
-  tests?: (TestO | string)[] | null;
-};
-export const TestIO: t.Type<Test, TestO> = t.recursion('Test', () =>
-  t.type({
-    name: createOptionFromNullable(t.string),
-    tests: createOptionFromNullable(t.array(t.union([TestIO, t.string]))),
-  })
-);
-
 /**
  * Schema Object
  *
  * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#SchemaObject
  */
 export type SchemaObject = {
-  nullable: Option<boolean>;
+  nullable: boolean;
   discriminator: Option<DiscriminatorObject>;
-  readOnly: Option<boolean>;
-  writeOnly: Option<boolean>;
+  readOnly: boolean;
+  writeOnly: boolean;
   xml: Option<XmlObject>;
   externalDocs: Option<ExternalDocumentationObject>;
   example: Option<any>;
-  examples: Option<any[]>;
-  deprecated: Option<boolean>;
+  examples: any[];
+  deprecated: boolean;
   type: Option<string>;
-  allOf: Option<(SchemaObject | ReferenceObject)[]>;
-  oneOf: Option<(SchemaObject | ReferenceObject)[]>;
-  anyOf: Option<(SchemaObject | ReferenceObject)[]>;
+  allOf: (SchemaObject | ReferenceObject)[];
+  oneOf: (SchemaObject | ReferenceObject)[];
+  anyOf: (SchemaObject | ReferenceObject)[];
   not: Option<SchemaObject | ReferenceObject>;
   items: Option<SchemaObject | ReferenceObject>;
   properties: Option<Record<string, SchemaObject | ReferenceObject>>;
@@ -277,8 +258,8 @@ export type SchemaObject = {
   uniqueItems: Option<boolean>;
   maxProperties: Option<number>;
   minProperties: Option<number>;
-  required: Option<string[]>;
-  enum: Option<any[]>;
+  required: string[];
+  enum: any[];
 };
 // This type is necessary to make the types work
 export type SchemaObjectO = {
@@ -325,25 +306,25 @@ export const SchemaObjectIO: t.Type<SchemaObject, SchemaObjectO> = t.recursion(
   'SchemaObjectIO',
   () =>
     t.type({
-      nullable: createOptionFromNullable(t.boolean),
+      nullable: fromNullable(t.boolean)(false),
       discriminator: createOptionFromNullable(DiscriminatorObjectIO),
-      readOnly: createOptionFromNullable(t.boolean),
-      writeOnly: createOptionFromNullable(t.boolean),
+      readOnly: fromNullable(t.boolean)(false),
+      writeOnly: fromNullable(t.boolean)(false),
       xml: createOptionFromNullable(XmlObjectIO),
       externalDocs: createOptionFromNullable(ExternalDocumentationObjectIO),
       example: createOptionFromNullable(t.any),
-      examples: createOptionFromNullable(t.array(t.any)),
-      deprecated: createOptionFromNullable(t.boolean),
+      examples: fromNullable(t.array(t.any))([]),
+      deprecated: fromNullable(t.boolean)(false),
       type: createOptionFromNullable(t.string),
-      allOf: createOptionFromNullable(
+      allOf: fromNullable(
         t.array(t.union([SchemaObjectIO, ReferenceObjectIO]))
-      ),
-      oneOf: createOptionFromNullable(
+      )([]),
+      oneOf: fromNullable(
         t.array(t.union([SchemaObjectIO, ReferenceObjectIO]))
-      ),
-      anyOf: createOptionFromNullable(
+      )([]),
+      anyOf: fromNullable(
         t.array(t.union([SchemaObjectIO, ReferenceObjectIO]))
-      ),
+      )([]),
       not: createOptionFromNullable(
         t.union([SchemaObjectIO, ReferenceObjectIO])
       ),
@@ -373,8 +354,8 @@ export const SchemaObjectIO: t.Type<SchemaObject, SchemaObjectO> = t.recursion(
       uniqueItems: createOptionFromNullable(t.boolean),
       maxProperties: createOptionFromNullable(t.number),
       minProperties: createOptionFromNullable(t.number),
-      required: createOptionFromNullable(t.array(t.string)),
-      enum: createOptionFromNullable(t.array(t.any)),
+      required: fromNullable(t.array(t.string))([]),
+      enum: fromNullable(t.array(t.any))([]),
     })
 );
 
@@ -504,7 +485,7 @@ export type EncodingObject = t.TypeOf<typeof EncodingObjectIO>;
 export const RequestBodyObjectIO = t.type({
   description: createOptionFromNullable(t.string),
   content: ContentObjectIO,
-  required: createOptionFromNullable(t.boolean),
+  required: fromNullable(t.boolean)(false),
 });
 export type RequestBodyObject = t.TypeOf<typeof RequestBodyObjectIO>;
 
@@ -637,7 +618,7 @@ export type SecurityRequirementObject = t.TypeOf<
  * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#OperationObject
  */
 export const OperationObjectIO = t.type({
-  tags: createOptionFromNullable(t.array(t.string)),
+  tags: fromNullable(t.array(t.string))([]),
   summary: createOptionFromNullable(t.string),
   description: createOptionFromNullable(t.string),
   externalDocs: createOptionFromNullable(ExternalDocumentationObjectIO),
@@ -713,33 +694,33 @@ export type CallbacksObject = t.TypeOf<typeof CallbacksObjectIO>;
  * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#ComponentsObject
  */
 export const ComponentsObjectIO = t.type({
-  schemas: createOptionFromNullable(
+  schemas: fromNullable(
     t.record(t.string, t.union([SchemaObjectIO, ReferenceObjectIO]))
-  ),
-  responses: createOptionFromNullable(
+  )({}),
+  responses: fromNullable(
     t.record(t.string, t.union([ResponseObjectIO, ReferenceObjectIO]))
-  ),
-  parameters: createOptionFromNullable(
+  )({}),
+  parameters: fromNullable(
     t.record(t.string, t.union([ParameterObjectIO, ReferenceObjectIO]))
-  ),
-  examples: createOptionFromNullable(
+  )({}),
+  examples: fromNullable(
     t.record(t.string, t.union([ExampleObjectIO, ReferenceObjectIO]))
-  ),
-  requestBodies: createOptionFromNullable(
+  )({}),
+  requestBodies: fromNullable(
     t.record(t.string, t.union([RequestBodyObjectIO, ReferenceObjectIO]))
-  ),
-  headers: createOptionFromNullable(
+  )({}),
+  headers: fromNullable(
     t.record(t.string, t.union([HeaderObjectIO, ReferenceObjectIO]))
-  ),
-  securitySchemes: createOptionFromNullable(
+  )({}),
+  securitySchemes: fromNullable(
     t.record(t.string, t.union([SecuritySchemeObjectIO, ReferenceObjectIO]))
-  ),
-  links: createOptionFromNullable(
+  )({}),
+  links: fromNullable(
     t.record(t.string, t.union([LinkObjectIO, ReferenceObjectIO]))
-  ),
-  callbacks: createOptionFromNullable(
+  )({}),
+  callbacks: fromNullable(
     t.record(t.string, t.union([CallbackObjectIO, ReferenceObjectIO]))
-  ),
+  )({}),
 });
 export type ComponentsObject = t.TypeOf<typeof ComponentsObjectIO>;
 
@@ -751,11 +732,21 @@ export type ComponentsObject = t.TypeOf<typeof ComponentsObjectIO>;
 export const OpenAPIObjectIO = t.type({
   openapi: Semver,
   info: InfoObjectIO,
-  servers: createOptionFromNullable(t.array(ServerObjectIO)),
+  servers: fromNullable(t.array(ServerObjectIO))([]),
   paths: PathsObjectIO,
-  components: createOptionFromNullable(ComponentsObjectIO),
-  security: createOptionFromNullable(t.array(SecurityRequirementObjectIO)),
-  tags: createOptionFromNullable(t.array(TagObjectIO)),
+  components: fromNullable(ComponentsObjectIO)({
+    schemas: {},
+    responses: {},
+    parameters: {},
+    examples: {},
+    requestBodies: {},
+    headers: {},
+    securitySchemes: {},
+    links: {},
+    callbacks: {},
+  }),
+  security: fromNullable(t.array(SecurityRequirementObjectIO))([]),
+  tags: fromNullable(t.array(TagObjectIO))([]),
   externalDocs: createOptionFromNullable(ExternalDocumentationObjectIO),
 });
 export type OpenAPIObject = t.TypeOf<typeof OpenAPIObjectIO>;
