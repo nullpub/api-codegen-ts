@@ -1,4 +1,4 @@
-import { fromLeft, TaskEither, taskEither, tryCatch } from 'fp-ts/lib/TaskEither';
+import { fromLeft, TaskEither, tryCatch } from 'fp-ts/lib/TaskEither';
 import { Errors } from 'io-ts';
 import { formatValidationError } from 'io-ts-reporters';
 
@@ -17,7 +17,7 @@ function safeJsonParse<I>(s: string, path: string): TaskEither<string, I> {
 function getSource(M: MonadApp<OpenAPIObject>): App<string> {
   return M.existsFile(M.src).chain(e => {
     if (e) {
-      return M.log(`Reading ${M.src}`).chain(() => M.readFile(M.src));
+      return M.log(`Reading source: ${M.src}`).chain(() => M.readFile(M.src));
     }
     return fromLeft<string, string>(`Source does not exist ${M.src}`);
   });
@@ -41,12 +41,13 @@ function parseSource(
   const decoded = OpenAPIObjectIO.decode(source);
   return decoded.fold(
     errors => writeParseLog(M, errors),
-    api => taskEither.of(api)
+    api => M.log(`Validated source: ${M.src}`).map(() => api)
   );
 }
 
 function main(M: MonadApp<OpenAPIObject>): App<OpenAPIObject> {
-  return getSource(M)
+  return M.log('Parser: OpenApi 3.0.2')
+    .chain(() => getSource(M))
     .chain(content => safeJsonParse(content, M.src))
     .chain(content => parseSource(M, content));
 }

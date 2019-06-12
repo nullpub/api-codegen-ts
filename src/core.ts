@@ -1,8 +1,7 @@
 import { sequenceT } from 'fp-ts/lib/Apply';
 import { array } from 'fp-ts/lib/Array';
-import { Either, left, right } from 'fp-ts/lib/Either';
 import { fromNullable, Option, option } from 'fp-ts/lib/Option';
-import { fromEither, fromLeft, TaskEither, taskEither, tryCatch } from 'fp-ts/lib/TaskEither';
+import { fromLeft, TaskEither, taskEither, tryCatch } from 'fp-ts/lib/TaskEither';
 import * as path from 'path';
 
 export type PartialExcept<T, E extends keyof T> = Partial<T> & Pick<T, E>;
@@ -69,18 +68,21 @@ function getPackageConfig<I>(M: Config<I>): TaskEither<string, PackageConfig> {
       const dst = fromNullable(json.apiCodegen).chain(o => fromNullable(o.dst));
 
       if (src.isNone()) {
-        return fromLeft<string, PackageConfig>(`Source path is required.`);
+        return fromLeft(`Source path is required.`);
       }
 
       if (dst.isNone()) {
-        return fromLeft<string, PackageConfig>('Destination path is required');
+        return fromLeft('Destination path is required');
       }
 
-      return M.log(`Project name detected: ${name}`).map(() => ({
-        name,
-        src,
-        dst,
-      }));
+      return M.log(`Project name detected: ${name}`)
+        .chain(log(M, `Source file: ${src.value}`))
+        .chain(log(M, `Destination: ${dst.value}`))
+        .map(() => ({
+          name,
+          src,
+          dst,
+        }));
     });
 }
 
@@ -90,12 +92,11 @@ function assembleMonad<I>(
 ): TaskEither<string, MonadApp<I>> {
   const src = fromNullable(config.src).alt(pConfig.src);
   const dst = fromNullable(config.dst).alt(pConfig.dst);
-  const monad: Either<string, MonadApp<I>> = sequenceT(option)(src, dst)
+  return sequenceT(option)(src, dst)
     .map(([src, dst]) => ({ src, dst }))
-    .fold(left('No src or dst in package.json or config.'), ps =>
-      right(Object.assign({}, config, ps, taskEither) as MonadApp<I>)
+    .fold(fromLeft('No src or dst in package.json or config.'), ps =>
+      taskEither.of({ ...config, ...ps })
     );
-  return fromEither(monad);
 }
 
 function writeFile<I>(M: MonadApp<I>, file: File): TaskEither<string, void> {
@@ -123,7 +124,7 @@ function writeFiles<I>(
     .map(() => undefined);
 }
 
-export function log<I>(M: MonadApp<I>, message: string) {
+export function log(M: Log, message: string) {
   return function<P>(pass: P): TaskEither<string, P> {
     return M.log(message).map(() => pass);
   };
@@ -133,9 +134,14 @@ export function main<I>(config: Config<I>): TaskEither<string, void> {
   return getPackageConfig(config)
     .chain(p => assembleMonad(config, p))
     .chain(M =>
-      M.parser(M)
-        .chain(log(M, 'Parsing done'))
+      M.log('Starting parsing')
+        .chain(() => M.parser(M))
+        .chain(log(M, 'Finished parsing'))
+        .chain(log(M, 'Starting transforms'))
         .chain(i => M.printer(M, i))
+        .chain(log(M, 'Finished transforms'))
+        .chain(log(M, 'Starting to write files'))
         .chain(files => writeFiles(M, files))
+        .chain(log(M, 'Finished writing files'))
     );
 }
