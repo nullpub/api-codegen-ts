@@ -1,6 +1,7 @@
 import { log } from 'fp-ts/lib/Console';
 import { IO } from 'fp-ts/lib/IO';
-import { fromIO, Task, task } from 'fp-ts/lib/Task';
+import { fromIO as fromIOTask, Task, task } from 'fp-ts/lib/Task';
+import { fromIO } from 'fp-ts/lib/TaskEither';
 import * as fs from 'fs-extra';
 import glob = require('glob');
 import rimraf = require('rimraf');
@@ -24,7 +25,7 @@ const monadApp: Config<OpenAPIObject> = {
   // Log
   log: (message: string) => fromIO(log(message)),
 
-  // Other
+  // App
   parser: openApiParser,
   printer: typescriptPrinter,
 };
@@ -32,7 +33,7 @@ const monadApp: Config<OpenAPIObject> = {
 const exit = (code: 0 | 1) => new IO(() => process.exit(code));
 
 function onLeft(e: string): Task<void> {
-  return fromIO(log(e).chain(() => exit(1)));
+  return fromIOTask(log(e).chain(() => exit(1)));
 }
 
 function onRight(): Task<void> {

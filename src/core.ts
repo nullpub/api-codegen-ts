@@ -1,9 +1,7 @@
 import { sequenceT } from 'fp-ts/lib/Apply';
 import { array } from 'fp-ts/lib/Array';
 import { Either, left, right } from 'fp-ts/lib/Either';
-import { MonadTask2 } from 'fp-ts/lib/MonadTask';
 import { fromNullable, Option, option } from 'fp-ts/lib/Option';
-import { Task } from 'fp-ts/lib/Task';
 import { fromEither, fromLeft, TaskEither, taskEither, tryCatch } from 'fp-ts/lib/TaskEither';
 import * as path from 'path';
 
@@ -30,15 +28,15 @@ export interface PackageConfig {
 }
 
 export interface FileSystem {
-  getFilenames: (pattern: string) => Task<Array<string>>;
-  readFile: (path: string) => Task<string>;
-  writeFile: (path: string, content: string) => Task<void>;
-  existsFile: (path: string) => Task<boolean>;
-  clean: (pattern: string) => Task<void>;
+  getFilenames: (pattern: string) => TaskEither<string, Array<string>>;
+  readFile: (path: string) => TaskEither<string, string>;
+  writeFile: (path: string, content: string) => TaskEither<string, void>;
+  existsFile: (path: string) => TaskEither<string, boolean>;
+  clean: (pattern: string) => TaskEither<string, void>;
 }
 
 export interface Log {
-  log: (message: string) => Task<void>;
+  log: (message: string) => TaskEither<string, void>;
 }
 
 export type Parser<I> = (M: MonadApp<I>) => TaskEither<string, I>;
@@ -51,10 +49,9 @@ export interface Config<I> extends FileSystem, Log {
   printer: Printer<I>;
 }
 
-export type MonadApp<I = unknown> = Required<Config<I>> &
-  MonadTask2<'TaskEither'>;
+export type MonadApp<I = unknown> = Required<Config<I>>;
 
-export type PartialMonadApp<I = unknown> = Config<I> & MonadTask2<'TaskEither'>;
+export type PartialMonadApp<I = unknown> = Config<I>;
 
 function safeJsonParse<I>(s: string): TaskEither<string, I> {
   return tryCatch(
@@ -64,10 +61,7 @@ function safeJsonParse<I>(s: string): TaskEither<string, I> {
 }
 
 function getPackageConfig<I>(M: Config<I>): TaskEither<string, PackageConfig> {
-  return taskEither
-    .fromTask<string, string>(
-      M.readFile(path.join(process.cwd(), 'package.json'))
-    )
+  return M.readFile(path.join(process.cwd(), 'package.json'))
     .chain(content => safeJsonParse<PackageJSON>(content))
     .chain(json => {
       const name = json.name;
@@ -82,9 +76,11 @@ function getPackageConfig<I>(M: Config<I>): TaskEither<string, PackageConfig> {
         return fromLeft<string, PackageConfig>('Destination path is required');
       }
 
-      return taskEither
-        .fromTask<string, void>(M.log(`Project name detected: ${name}`))
-        .map(() => ({ name, src, dst }));
+      return M.log(`Project name detected: ${name}`).map(() => ({
+        name,
+        src,
+        dst,
+      }));
     });
 }
 
@@ -104,23 +100,18 @@ function assembleMonad<I>(
 
 function writeFile<I>(M: MonadApp<I>, file: File): TaskEither<string, void> {
   const writeFile = M.writeFile(file.path, file.content);
-  return M.fromTask<string, boolean>(M.existsFile(file.path)).chain(exists => {
-    if (exists) {
-      if (file.overwrite) {
-        return M.fromTask<string, void>(
-          M.log(`Overwriting file ${file.path}`).chain(() => writeFile)
-        );
-      } else {
-        return M.fromTask<string, void>(
-          M.log(`File ${file.path} already exists, skipping creation`)
-        );
+  return M.existsFile(file.path).foldTaskEither(
+    str => fromLeft(str),
+    exists => {
+      if (exists) {
+        if (file.overwrite) {
+          return M.log(`Overwriting file ${file.path}`).chain(() => writeFile);
+        }
+        return M.log(`File ${file.path} already exists, skipping creation`);
       }
-    } else {
-      return M.fromTask<string, void>(
-        M.log(`Writing file ${file.path}`).chain(() => writeFile)
-      );
+      return M.log(`Writing file ${file.path}`).chain(() => writeFile);
     }
-  });
+  );
 }
 
 function writeFiles<I>(
@@ -132,14 +123,18 @@ function writeFiles<I>(
     .map(() => undefined);
 }
 
+export function log<I>(M: MonadApp<I>, message: string) {
+  return function<P>(pass: P): TaskEither<string, P> {
+    return M.log(message).map(() => pass);
+  };
+}
+
 export function main<I>(config: Config<I>): TaskEither<string, void> {
   return getPackageConfig(config)
     .chain(p => assembleMonad(config, p))
     .chain(M =>
       M.parser(M)
-        .chain(i =>
-          M.fromTask<string, void>(M.log(`Parsing Done`)).map(() => i)
-        )
+        .chain(log(M, 'Parsing done'))
         .chain(i => M.printer(M, i))
         .chain(files => writeFiles(M, files))
     );
