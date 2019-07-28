@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { log } from 'fp-ts/lib/Console';
 import * as IO from 'fp-ts/lib/IO';
 import { pipe } from 'fp-ts/lib/pipeable';
