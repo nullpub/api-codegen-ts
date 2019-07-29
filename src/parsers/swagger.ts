@@ -19,19 +19,17 @@ const convertTask = TE.taskify(converter.convertObj);
 function convertSpec(M: MonadApp<OpenAPIObject>, spec: unknown): App<unknown> {
   const convertedFileName = `CONVERTED-${path.basename(M.src)}`;
   const convertedFilePath = path.join(path.dirname(M.src), convertedFileName);
-  const openapiTE = pipe(
+  return pipe(
     M.log('Converting Swagger 2.0 to OpenApi 3.0.2'),
     TE.chain(() => convertTask(spec, {}) as TE.TaskEither<string | Error, any>), // UGGGGHHHH
-    TE.map(({ openapi }) => openapi as unknown)
-  );
-  const writeConversionFileTE = pipe(
-    openapiTE,
+    TE.map(({ openapi }) => openapi as unknown),
     TE.chain(openapi =>
-      M.writeFile(convertedFilePath, JSON.stringify(openapi))
-    ),
-    TE.chain(() => openapiTE)
+      pipe(
+        M.writeFile(convertedFilePath, JSON.stringify(openapi)),
+        TE.map(() => openapi)
+      )
+    )
   );
-  return writeConversionFileTE;
 }
 
 function main(M: MonadApp<OpenAPIObject>, F: File): App<OpenAPIObject> {
