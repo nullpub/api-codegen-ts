@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.1](https://github.com/nullpub/api-codegen-ts/compare/v0.3.0...v0.3.1) (2019-07-29)
+
+
+### Bug Fixes
+
+* fixed pathing of written converted spec ([9d77258](https://github.com/nullpub/api-codegen-ts/commit/9d77258))
+
+
+
 ## [0.3.0](https://github.com/nullpub/api-codegen-ts/compare/v0.2.2...v0.3.0) (2019-07-29)
 
 
