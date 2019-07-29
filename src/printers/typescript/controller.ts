@@ -247,17 +247,13 @@ const toRequestTypeDeclaration = (
   }
 
   return t.typeDeclaration(
-    operation.name + 'Request',
+    operation.name + 'Req',
     t.typeCombinator(requestProperties),
     true
   );
 };
 const toResponseTypeDeclaration = (operation: Operation): t.TypeDeclaration => {
-  return t.typeDeclaration(
-    operation.name + 'Response',
-    operation.response,
-    true
-  );
+  return t.typeDeclaration(operation.name + 'Res', operation.response, true);
 };
 
 const getFile = (
@@ -266,14 +262,16 @@ const getFile = (
   content: string
 ): File => toFile(path.join(C.dst, name), content);
 
-const printControllerReader = (
+const printControllerFactory = (
   { name, method, key }: Operation,
+  responeType: t.TypeDeclaration,
   requestType?: t.TypeDeclaration
 ): string => {
+  const resName = responeType.name;
   if (requestType) {
-    return `export const ${name}Reader = u.controllerFactory<${requestType.name}, ${name}Response>(${name}Response, '${method}', '${key}')`;
+    return `export const ${name}Factory = u.controllerFactory<${requestType.name}, ${resName}>(${resName}, '${method}', '${key}')`;
   }
-  return `export const ${name}Reader = u.requestlessControllerFactory<${name}Response>(${name}Response, '${method}', '${key}')`;
+  return `export const ${name}Factory = u.requestlessControllerFactory<${resName}>(${resName}, '${method}', '${key}')`;
 };
 
 const printOperationDescription = (operation: Operation): string => {
@@ -298,7 +296,13 @@ const printOperation = (operation: Operation): string => {
   output.push(responseRuntime);
   output.push('');
   output.push(operationDescription);
-  output.push(printControllerReader(operation, requestTypeDeclaration));
+  output.push(
+    printControllerFactory(
+      operation,
+      responseTypeDeclaration,
+      requestTypeDeclaration
+    )
+  );
 
   return output.join('\n');
 };
