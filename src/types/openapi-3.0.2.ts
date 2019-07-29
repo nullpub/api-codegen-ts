@@ -562,20 +562,16 @@ export type OAuthFlowsObject = t.TypeOf<typeof OAuthFlowsObjectIO>;
  *
  * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#SecuritySchemeObject
  */
-export const SecuritySchemeObjectIO = t.intersection([
-  t.type({
-    type: SecuritySchemeTypeIO,
-  }),
-  t.partial({
-    description: t.string,
-    name: t.string,
-    in: t.string,
-    scheme: t.string,
-    bearerFormat: t.string,
-    flows: OAuthFlowsObjectIO,
-    openIdConnectUrl: t.string,
-  }),
-]);
+export const SecuritySchemeObjectIO = t.partial({
+  type: SecuritySchemeTypeIO,
+  description: t.string,
+  name: t.string,
+  in: t.string,
+  scheme: t.string,
+  bearerFormat: t.string,
+  flows: OAuthFlowsObjectIO,
+  openIdConnectUrl: t.string,
+});
 export type SecuritySchemeObject = t.TypeOf<typeof SecuritySchemeObjectIO>;
 
 /**
@@ -583,7 +579,10 @@ export type SecuritySchemeObject = t.TypeOf<typeof SecuritySchemeObjectIO>;
  *
  * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#SecurityRequirementObject
  */
-export const SecurityRequirementObjectIO = t.record(t.string, t.string);
+export const SecurityRequirementObjectIO = t.record(
+  t.string,
+  SecuritySchemeObjectIO
+);
 export type SecurityRequirementObject = t.TypeOf<
   typeof SecurityRequirementObjectIO
 >;

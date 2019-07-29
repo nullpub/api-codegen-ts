@@ -2,7 +2,7 @@ import * as E from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';
 import * as TE from 'fp-ts/lib/TaskEither';
 import { Errors } from 'io-ts';
-import { PathReporter } from 'io-ts/lib/PathReporter';
+import { reporter } from 'io-ts-reporters';
 
 import { App, File, MonadApp, Parser } from '../core';
 import { OpenAPIObject, OpenAPIObjectIO } from '../types/openapi-3.0.2';
@@ -22,7 +22,7 @@ export function safeJsonParse<I>(s: string, path: string): App<I> {
 export function writeParseLog(M: MonadApp<OpenAPIObject>, errors: Errors) {
   const logName = `parse-errors.log`;
   return pipe(
-    M.writeFile(logName, PathReporter.report(E.left(errors)).join('\r\n\r\n')),
+    M.writeFile(logName, reporter(E.left(errors)).join('\r\n\r\n')),
     TE.chain(() =>
       TE.left<string | Error>(
         `Source validation failed. See errors in ${logName}`
