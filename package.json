@@ -9,6 +9,7 @@
     "clean": "rimraf rm -rf lib/*",
     "build": "npm run clean && tsc",
     "test": "tsc --noEmit && npm start",
+    "prepublishOnly": "npm run build",
     "release": "npx standard-version"
   },
   "repository": {
