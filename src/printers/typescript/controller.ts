@@ -18,6 +18,7 @@ import {
   ResponsesObject,
   SchemaObject,
 } from '../../types/openapi-3.0.2';
+import { index } from './INDEX_SOURCE';
 import { isRef, refName } from './ref';
 import { JSONSchema, to } from './schema';
 import { utilities } from './UTILITIES_SOURCE';
@@ -259,11 +260,11 @@ const toResponseTypeDeclaration = (operation: Operation): t.TypeDeclaration => {
   );
 };
 
-const getUtilitiesFile = (C: Config<OpenAPIObject>): App<File> =>
-  pipe(
-    TE.right(utilities),
-    TE.map(content => toFile(path.join(C.dst, 'utilities.ts'), content))
-  );
+const getFile = (
+  C: Config<OpenAPIObject>,
+  name: string,
+  content: string
+): File => toFile(path.join(C.dst, name), content);
 
 const printControllerReader = (
   { name, method, key }: Operation,
@@ -314,14 +315,9 @@ export function buildControllers(
   C: Config<OpenAPIObject>,
   spec: OpenAPIObject
 ): App<File[]> {
-  return pipe(
-    getUtilitiesFile(C),
-    TE.map(utilityFile => [
-      utilityFile,
-      toFile(
-        path.join(C.dst, 'controllers.ts'),
-        printControllers(fromPaths(C, spec.paths))
-      ),
-    ])
-  );
+  return TE.right([
+    getFile(C, 'utilities.ts', utilities),
+    getFile(C, 'index.ts', index),
+    getFile(C, 'controllers.ts', printControllers(fromPaths(C, spec.paths))),
+  ]);
 }
