@@ -18,7 +18,7 @@ const convertTask = TE.taskify(converter.convertObj);
 
 function convertSpec(M: MonadApp<OpenAPIObject>, spec: unknown): App<unknown> {
   const convertedFileName = `CONVERTED-${path.basename(M.src)}`;
-  const convertedFilePath = `${path.dirname(M.src)}${convertedFileName}`;
+  const convertedFilePath = path.join(path.dirname(M.src), convertedFileName);
   const openapiTE = pipe(
     M.log('Converting Swagger 2.0 to OpenApi 3.0.2'),
     TE.chain(() => convertTask(spec, {}) as TE.TaskEither<string | Error, any>), // UGGGGHHHH
