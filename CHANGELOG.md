@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.1](https://github.com/nullpub/api-codegen-ts/compare/v0.2.0...v0.2.1) (2019-07-29)
+
+
+### Bug Fixes
+
+* remove naming conflicts for index.ts ([9ab5292](https://github.com/nullpub/api-codegen-ts/commit/9ab5292))
+
+
+
 ## [0.2.0](https://github.com/nullpub/api-codegen-ts/compare/v0.1.3...v0.2.0) (2019-07-29)
 
 
