@@ -1,6 +1,6 @@
 {
   "name": "@nll/api-codegen-ts",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "A generalized api codegen library",
   "main": "lib/index.js",
   "bin": "lib/bin.js",
