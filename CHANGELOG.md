@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.5](https://github.com/nullpub/api-codegen-ts/compare/v0.4.4...v0.4.5) (2019-07-30)
+
+
+### Bug Fixes
+
+* sanitize name of query and path params ([3611d8f](https://github.com/nullpub/api-codegen-ts/commit/3611d8f))
+
+
+
 ### [0.4.4](https://github.com/nullpub/api-codegen-ts/compare/v0.4.3...v0.4.4) (2019-07-30)
 
 
