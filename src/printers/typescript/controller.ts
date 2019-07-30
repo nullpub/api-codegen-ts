@@ -68,6 +68,9 @@ import * as m from './models';
 import * as u from './utilities';
 `;
 
+const toCleanOperationId = (operationId: string) =>
+  operationId.replace(/[\W_]+/g, '_');
+
 const toCustomImportCombinator = (
   type: t.CustomCombinator,
   prefix = 'm.'
@@ -193,7 +196,7 @@ const toOperation = (
   operation: OperationObject,
   parameters: ParameterObject[] = []
 ): Operation => {
-  const name = operation.operationId || refName(key);
+  const name = toCleanOperationId(operation.operationId || refName(key));
   const path = toPath(parameters);
   const query = toQuery(parameters);
   const requestBody = isRef(operation.requestBody)
