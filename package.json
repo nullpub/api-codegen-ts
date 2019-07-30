@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/nullpub/api-codegen-ts#readme",
   "dependencies": {
-    "@nll/dux": "^5",
+    "@nll/dux": "^5.1.1",
     "@types/diff": "^4.0.2",
     "@types/fs-extra": "^7.0.0",
     "@types/glob": "^7.1.1",
@@ -35,13 +35,13 @@
     "@types/prettier": "^1.16.4",
     "@types/rimraf": "^2.0.2",
     "diff": "^4.0.1",
-    "fp-ts": "^2",
+    "fp-ts": "^2.0.3",
     "glob": "^7.1.4",
-    "io-ts": "^2",
     "io-ts-codegen": "^0.4.1",
-    "io-ts-reporters": "^1",
-    "io-ts-types": "^0",
-    "newtype-ts": "^0",
+    "io-ts-reporters": "^1.0.0",
+    "io-ts-types": "^0.5.0",
+    "io-ts": "^2.0.0",
+    "newtype-ts": "^0.3.2",
     "prettier": "^1.18.2",
     "rimraf": "^2.6.3",
     "swagger2openapi": "^5.3.1",
@@ -53,7 +53,6 @@
     "overwrite": false
   },
   "devDependencies": {
-    "rxjs": "^6.5.2",
     "standard-version": "^6.0.1"
   }
 }
