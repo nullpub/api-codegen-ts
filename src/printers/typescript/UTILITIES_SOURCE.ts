@@ -1,4 +1,5 @@
-export const utilities = `import { isLeft } from 'fp-ts/lib/Either';
+export const utilities = `import { AsyncActionCreators, effectsFactory, Meta } from '@nll/dux';
+import { isLeft } from 'fp-ts/lib/Either';
 import { Type } from 'io-ts';
 import { Observable, of, throwError } from 'rxjs';
 import { map, mergeMap } from 'rxjs/operators';
@@ -32,6 +33,14 @@ export type Controller<Req extends Request, Res> = (
   req: Req
 ) => Observable<Res>;
 
+export type ControllerFactory<Req extends Request, Res> = (
+  config: ApiConfig
+) => (req: Req) => Observable<Res>;
+
+export type ReqlessControllerFactory<Res> = (
+  config: ApiConfig
+) => () => Observable<Res>;
+
 export const pathMapper = (
   path: string,
   properties: Record<string, any> = {}
@@ -51,11 +60,21 @@ export const queryMapper = (query: Record<string, any> = {}): string => {
     .join('&')}\`;
 };
 
+export const effects = <P = void, R = void, E = void, M extends Meta = Meta>(
+  action: AsyncActionCreators<P, R, E, M>,
+  controllerFactory: ControllerFactory<P, R>
+) => (config: ApiConfig) => effectsFactory(action, controllerFactory(config));
+
+export const reqlessEffects = <R = void, E = void, M extends Meta = Meta>(
+  action: AsyncActionCreators<void, R, E, M>,
+  controllerFactory: ReqlessControllerFactory<R>
+) => (config: ApiConfig) => effectsFactory(action, controllerFactory(config));
+
 export const controllerFactory = <Req extends Request, Res>(
   codec: Type<Res>,
   method: ApiRequest['method'],
   path: string
-) => ({ request, server }: ApiConfig) => (req: Req) => {
+): ControllerFactory<Req, Res> => ({ request, server }) => req => {
   const query = queryMapper(req.query);
   const url = \`\${server}\${pathMapper(path, req.path)}\${query}\`;
 
@@ -69,7 +88,7 @@ export const requestlessControllerFactory = <Res>(
   codec: Type<Res>,
   method: ApiRequest['method'],
   path: string
-) => ({ request, server }: ApiConfig) => () => {
+): ReqlessControllerFactory<Res> => ({ request, server }) => () => {
   const url = \`\${server}\${path}\`;
 
   return request({ method, url }).pipe(

@@ -18,6 +18,7 @@ import {
   ResponsesObject,
   SchemaObject,
 } from '../../types/openapi-3.0.2';
+import { printActionsFile } from './actions';
 import { index } from './INDEX_SOURCE';
 import { isRef, refName } from './ref';
 import { JSONSchema, to } from './schema';
@@ -43,10 +44,13 @@ const VERBS: Method[] = [
   'trace',
 ];
 
-interface Operation {
+export interface Operation {
   name: string;
   method: Method;
+  request?: t.TypeReference;
+  requestDeclaration?: t.TypeDeclaration;
   response: t.TypeReference;
+  responseDeclaration: t.TypeDeclaration;
   key: string;
   path?: t.TypeReference;
   query?: t.TypeReference;
@@ -172,7 +176,7 @@ const findSuccessResponse = (
   return response;
 };
 
-const toResponse = (responses: ResponsesObject): t.TypeReference =>
+const toResponseTypeReference = (responses: ResponsesObject): t.TypeReference =>
   O.fold(() => t.unknownType, toReferenceWrapper)(
     findSuccessResponse(responses)
   );
@@ -184,17 +188,32 @@ const toOperation = (
   operation: OperationObject,
   parameters: ParameterObject[] = []
 ): Operation => {
+  const name = operation.operationId;
+  const path = toPath(parameters);
+  const query = toQuery(parameters);
+  const requestBody = isRef(operation.requestBody)
+    ? toReferenceWrapper(operation.requestBody)
+    : toRequestBody(operation.requestBody);
+  const request = toRequestTypeReference(path, query, requestBody);
+  const requestDeclaration = toTypeDeclaration(`${name}Req`, request);
+  const response = toResponseTypeReference(operation.responses);
+  const responseDeclaration = toTypeDeclaration(
+    `${name}Res`,
+    response
+  ) as t.TypeDeclaration;
+
   return {
     method,
-    name: operation.operationId || key, // TODO This is probably wrong
+    name: operation.operationId, // TODO This is probably wrong
     description: operation.description || operation.summary,
     key,
-    path: toPath(parameters),
-    query: toQuery(parameters),
-    requestBody: isRef(operation.requestBody)
-      ? toReferenceWrapper(operation.requestBody)
-      : toRequestBody(operation.requestBody),
-    response: toResponse(operation.responses),
+    path,
+    query,
+    requestBody,
+    request,
+    requestDeclaration,
+    response,
+    responseDeclaration,
   };
 };
 
@@ -228,32 +247,36 @@ const fromPaths = (
     .map(o => o.value);
 };
 
-const toRequestTypeDeclaration = (
-  operation: Operation
-): t.TypeDeclaration | undefined => {
+const toRequestTypeReference = (
+  path?: Operation['path'],
+  query?: Operation['query'],
+  requestBody?: Operation['requestBody']
+): t.TypeReference | undefined => {
   let requestProperties: t.Property[] = [];
-  if (operation.path) {
-    requestProperties.push(t.property('path', operation.path));
+  if (path) {
+    requestProperties.push(t.property('path', path));
   }
-  if (operation.query) {
-    requestProperties.push(t.property('query', operation.query));
+  if (query) {
+    requestProperties.push(t.property('query', query));
   }
-  if (operation.requestBody) {
-    requestProperties.push(t.property('body', operation.requestBody));
+  if (requestBody) {
+    requestProperties.push(t.property('body', requestBody));
   }
 
   if (requestProperties.length === 0) {
     return;
   }
 
-  return t.typeDeclaration(
-    operation.name + 'Req',
-    t.typeCombinator(requestProperties),
-    true
-  );
+  return t.typeCombinator(requestProperties);
 };
-const toResponseTypeDeclaration = (operation: Operation): t.TypeDeclaration => {
-  return t.typeDeclaration(operation.name + 'Res', operation.response, true);
+
+const toTypeDeclaration = (
+  name: string,
+  typeReference?: t.TypeReference
+): t.TypeDeclaration | undefined => {
+  return typeReference
+    ? t.typeDeclaration(name, typeReference, true)
+    : undefined;
 };
 
 const getFile = (
@@ -262,14 +285,16 @@ const getFile = (
   content: string
 ): File => toFile(path.join(C.dst, name), content);
 
-const printControllerFactory = (
-  { name, method, key }: Operation,
-  responeType: t.TypeDeclaration,
-  requestType?: t.TypeDeclaration
-): string => {
-  const resName = responeType.name;
-  if (requestType) {
-    return `export const ${name}Factory = u.controllerFactory<${requestType.name}, ${resName}>(${resName}, '${method}', '${key}')`;
+const printControllerFactory = ({
+  name,
+  method,
+  key,
+  responseDeclaration,
+  requestDeclaration,
+}: Operation): string => {
+  const resName = responseDeclaration.name;
+  if (requestDeclaration) {
+    return `export const ${name}Factory = u.controllerFactory<${requestDeclaration.name}, ${resName}>(${resName}, '${method}', '${key}')`;
   }
   return `export const ${name}Factory = u.requestlessControllerFactory<${resName}>(${resName}, '${method}', '${key}')`;
 };
@@ -282,13 +307,11 @@ const printOperationDescription = (operation: Operation): string => {
 };
 
 const printOperation = (operation: Operation): string => {
-  const requestTypeDeclaration = toRequestTypeDeclaration(operation);
-  const requestStatic = requestTypeDeclaration
-    ? t.printStatic(requestTypeDeclaration)
+  const requestStatic = operation.requestDeclaration
+    ? t.printStatic(operation.requestDeclaration)
     : '';
-  const responseTypeDeclaration = toResponseTypeDeclaration(operation);
-  const responseStatic = t.printStatic(responseTypeDeclaration);
-  const responseRuntime = t.printRuntime(responseTypeDeclaration);
+  const responseStatic = t.printStatic(operation.responseDeclaration);
+  const responseRuntime = t.printRuntime(operation.responseDeclaration);
   const operationDescription = printOperationDescription(operation);
 
   let output = requestStatic.length > 0 ? [requestStatic] : [];
@@ -296,13 +319,7 @@ const printOperation = (operation: Operation): string => {
   output.push(responseRuntime);
   output.push('');
   output.push(operationDescription);
-  output.push(
-    printControllerFactory(
-      operation,
-      responseTypeDeclaration,
-      requestTypeDeclaration
-    )
-  );
+  output.push(printControllerFactory(operation));
 
   return output.join('\n');
 };
@@ -319,9 +336,11 @@ export function buildControllers(
   C: Config<OpenAPIObject>,
   spec: OpenAPIObject
 ): App<File[]> {
+  const operations = fromPaths(C, spec.paths);
   return TE.right([
     getFile(C, 'utilities.ts', utilities),
     getFile(C, 'index.ts', index),
-    getFile(C, 'controllers.ts', printControllers(fromPaths(C, spec.paths))),
+    getFile(C, 'controllers.ts', printControllers(operations)),
+    getFile(C, 'actions.ts', printActionsFile(operations, spec.info.title)),
   ]);
 }
