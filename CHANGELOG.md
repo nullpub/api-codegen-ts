@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.1](https://github.com/nullpub/api-codegen-ts/compare/v0.4.0...v0.4.1) (2019-07-30)
+
+
+### Bug Fixes
+
+* operationId is not required on an operation ([beeab6a](https://github.com/nullpub/api-codegen-ts/commit/beeab6a))
+
+
+
 ## [0.4.0](https://github.com/nullpub/api-codegen-ts/compare/v0.3.2...v0.4.0) (2019-07-30)
 
 
