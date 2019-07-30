@@ -207,7 +207,7 @@ function writeFiles<T>(M: Config<T>, files: File[]): App<void> {
   return pipe(
     M.makeDirectory(M.dst),
     TE.chain(() =>
-      array.traverse(TE.taskEither)(files, file => writeFile(M, file))
+      array.sequence(TE.taskEither)(files.map(file => writeFile(M, file)))
     ),
     TE.map(() => undefined)
   );

@@ -188,7 +188,7 @@ const toOperation = (
   operation: OperationObject,
   parameters: ParameterObject[] = []
 ): Operation => {
-  const name = operation.operationId;
+  const name = operation.operationId || refName(key);
   const path = toPath(parameters);
   const query = toQuery(parameters);
   const requestBody = isRef(operation.requestBody)
@@ -204,7 +204,7 @@ const toOperation = (
 
   return {
     method,
-    name: operation.operationId, // TODO This is probably wrong
+    name,
     description: operation.description || operation.summary,
     key,
     path,

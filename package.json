@@ -50,7 +50,7 @@
   "apiCodegen": {
     "src": "./local/scripter-spec.json",
     "dst": "./local/dest",
-    "overwrite": true
+    "overwrite": false
   },
   "devDependencies": {
     "rxjs": "^6.5.2",

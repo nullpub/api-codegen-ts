@@ -595,9 +595,9 @@ export type SecurityRequirementObject = t.TypeOf<
 export const OperationObjectIO = t.intersection([
   t.type({
     responses: ResponsesObjectIO,
-    operationId: t.string,
   }),
   t.partial({
+    operationId: t.string,
     tags: t.array(t.string),
     summary: t.string,
     description: t.string,
