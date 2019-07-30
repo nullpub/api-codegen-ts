@@ -162,10 +162,13 @@ const findSuccessResponse = (
     O.mapNullable(c => responses[c])
   );
 
+  const catchAllResponse = O.fromNullable(responses['*/*']);
+
   const defaultResponse = O.fromNullable(responses['default']);
 
   const response = pipe(
     codeResponse,
+    O.alt(() => catchAllResponse),
     O.alt(() => defaultResponse),
     O.filter((_: any): _ is ResponseObject => true),
     O.mapNullable(r => r.content),
