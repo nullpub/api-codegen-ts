@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.2](https://github.com/nullpub/api-codegen-ts/compare/v0.4.1...v0.4.2) (2019-07-30)
+
+
+### Bug Fixes
+
+* add catchall response to findSuccessResponse ([934a529](https://github.com/nullpub/api-codegen-ts/commit/934a529))
+
+
+
 ### [0.4.1](https://github.com/nullpub/api-codegen-ts/compare/v0.4.0...v0.4.1) (2019-07-30)
 
 
