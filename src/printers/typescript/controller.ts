@@ -195,7 +195,9 @@ const toOperation = (
   operation: OperationObject,
   parameters: ParameterObject[] = []
 ): Operation => {
-  const name = sanitizeName(operation.operationId || refName(key));
+  const name = sanitizeName(
+    operation.operationId || `${method}_${refName(key)}`
+  );
   const path = toPath(parameters);
   const query = toQuery(parameters);
   const requestBody = isRef(operation.requestBody)
