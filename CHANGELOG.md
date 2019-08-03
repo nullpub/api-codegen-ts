@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.7](https://github.com/nullpub/api-codegen-ts/compare/v0.4.6...v0.4.7) (2019-08-03)
+
+
+### Bug Fixes
+
+* try to generate unique name with operationId does not exist ([339518c](https://github.com/nullpub/api-codegen-ts/commit/339518c))
+
+
+
 ### [0.4.6](https://github.com/nullpub/api-codegen-ts/compare/v0.4.5...v0.4.6) (2019-07-30)
 
 
