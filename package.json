@@ -26,13 +26,15 @@
     "url": "https://github.com/nullpub/api-codegen-ts/issues"
   },
   "homepage": "https://github.com/nullpub/api-codegen-ts#readme",
-  "dependencies": {
+  "peerDependencies": {
     "@nll/datum": "^2.2.1",
     "@nll/dux": "^6.0.1",
-    "diff": "^4.0.1",
     "fp-ts": "^2.0.5",
+    "io-ts": "^2.0.1"
+  },
+  "dependencies": {
+    "diff": "^4.0.1",
     "glob": "^7.1.4",
-    "io-ts": "^2.0.1",
     "io-ts-codegen": "^0.4.1",
     "io-ts-reporters": "^1.0.0",
     "io-ts-types": "^0.5.0",
