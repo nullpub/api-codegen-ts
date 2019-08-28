@@ -1,4 +1,5 @@
-export const utilities = `import { AsyncActionCreators, effectsFactory, Meta } from '@nll/dux';
+export const utilities = `import { AsyncActionCreators, Meta } from '@nll/dux/lib/Actions';
+import { effectsFactory } from '@nll/dux/lib/Effects';
 import { isLeft } from 'fp-ts/lib/Either';
 import { Type } from 'io-ts';
 import { Observable, of, throwError } from 'rxjs';

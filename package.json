@@ -27,8 +27,8 @@
   },
   "homepage": "https://github.com/nullpub/api-codegen-ts#readme",
   "peerDependencies": {
-    "@nll/datum": "^2.2.1",
-    "@nll/dux": "^6.0.1",
+    "@nll/datum": "^2.6.0",
+    "@nll/dux": "^7.0.2",
     "fp-ts": "^2.0.5",
     "io-ts": "^2.0.1"
   },

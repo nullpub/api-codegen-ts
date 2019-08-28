@@ -1,6 +1,7 @@
 import { Operation } from './controller';
 
-const IMPORTS = `import { actionCreatorFactory, asyncReducersFactory } from '@nll/dux';
+const IMPORTS = `import { actionCreatorFactory } from '@nll/dux/lib/Actions';
+import { asyncReducersFactory } from '@nll/dux/lib/Reducers';
 
 import * as cs from './controllers'
 import * as u from './utilities'`;
