@@ -50,7 +50,7 @@
     "@types/prettier": "^1.16.4",
     "@types/rimraf": "^2.0.2",
     "rimraf": "^2.6.3",
-    "standard-version": "^6.0.1",
+    "standard-version": "^8.0.1",
     "typescript": "^3.5.3"
   },
   "apiCodegen": {
